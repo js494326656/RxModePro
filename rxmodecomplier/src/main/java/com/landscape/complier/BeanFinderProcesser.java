@@ -2,7 +2,7 @@ package com.landscape.complier;
 
 import com.google.auto.service.AutoService;
 import com.landscape.annotation.RxBean;
-import com.landscape.model.RxBeanField;
+import com.landscape.model.RxBeanType;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -87,14 +87,13 @@ public class BeanFinderProcesser extends AbstractProcessor {
     private void processRxBean(RoundEnvironment roundEnv) throws IllegalArgumentException {
         for (Element element : roundEnv.getElementsAnnotatedWith(RxBean.class)) {
             // TODO: 16/8/4 检查字段的修饰符
-            AnnotatedClass annotatedClass = getAnnotatedClass(element);
-            RxBeanField field = new RxBeanField(element);
-            annotatedClass.addField(field);
+            AnnotatedClass annotatedClass = getAnnotatedClass((TypeElement) element);
+            RxBeanType field = new RxBeanType(element);
+            annotatedClass.addClass(field);
         }
     }
 
-    private AnnotatedClass getAnnotatedClass(Element element) {
-        TypeElement classElement = (TypeElement) element.getEnclosingElement();
+    private AnnotatedClass getAnnotatedClass(TypeElement classElement) {
         String fullClassName = classElement.getQualifiedName().toString();
         AnnotatedClass annotatedClass = mAnnotatedClassMap.get(fullClassName);
         if (annotatedClass == null) {

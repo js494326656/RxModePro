@@ -1,6 +1,6 @@
 package com.landscape.complier;
 
-import com.landscape.model.RxBeanField;
+import com.landscape.model.RxBeanType;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
@@ -8,12 +8,16 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
+
+import rx.subjects.PublishSubject;
 
 /**
  * Created by brucezz on 2016-07-27.
@@ -23,12 +27,11 @@ import javax.lang.model.util.Elements;
 public class AnnotatedClass {
 
     public TypeElement mClassElement;
-    public List<RxBeanField> mFields;
+    public RxBeanType mType;
     public Elements mElementUtils;
 
     public AnnotatedClass(TypeElement classElement, Elements elementUtils) {
         this.mClassElement = classElement;
-        this.mFields = new ArrayList<>();
         this.mElementUtils = elementUtils;
     }
 
@@ -36,26 +39,57 @@ public class AnnotatedClass {
         return mClassElement.getQualifiedName().toString();
     }
 
-    public void addField(RxBeanField field) {
-        mFields.add(field);
+    public void addClass(RxBeanType type) {
+        mType = type;
     }
 
     public JavaFile generateFinder() {
+        List<MethodSpec> injectMethods = new ArrayList<>();
+        Method[] methods = null;
+        MethodSpec constructor = null;
+        try {
+            Class<?> cls = Class.forName(mClassElement.getSimpleName().toString());
+            methods = cls.getMethods();
+            // constructor
+            constructor = MethodSpec.constructorBuilder()
+                    .addModifiers(Modifier.PUBLIC)
+                    .addParameter(cls, "parent")
+                    .addStatement("this.$N = $N", "greeting", "greeting")
+                    .build();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
 
         // method inject(final T host, Object source, Provider provider)
-        MethodSpec.Builder injectMethodBuilder = MethodSpec.methodBuilder("inject")
-            .addModifiers(Modifier.PUBLIC)
-            .addAnnotation(Override.class)
-            .addParameter(TypeName.get(mClassElement.asType()), "host", Modifier.FINAL)
-            .addParameter(TypeName.OBJECT, "source")
-            .addParameter(TypeUtil.PROVIDER, "provider");
+        MethodSpec.Builder injectMethodBuilder = MethodSpec.methodBuilder("sendTrigger")
+                .addModifiers(Modifier.PUBLIC)
+                .addAnnotation(Override.class)
+                .addParameter(TypeName.get(mClassElement.asType()), "bean")
+                .addStatement("if(triggers != null){triggers.onNext(bean);}");
 
-//        for (BindViewField field : mFields) {
-//            // find views
-//            injectMethodBuilder.addStatement("host.$N = ($T)(provider.findView(source, $L))", field.getFieldName(),
-//                ClassName.get(field.getFieldType()), field.getResId());
-//        }
-//
+
+        // add sendtrigger()
+        for (int i = 0; i < methods.length; i++) {
+            Method method = methods[i];
+            if (method.getName().startsWith("set")) {
+                List<VariableElement> params = (List<VariableElement>) mType.getMethodElement().get(i).getParameters();
+                if (params.size() > 0) {
+                    injectMethods.add(
+                            MethodSpec.methodBuilder(method.getName())
+                                    .addModifiers(Modifier.PUBLIC)
+                                    .addAnnotation(Override.class)
+                                    .returns(TypeName.VOID)
+                                    .addParameter(TypeName.get(params.get(0).asType()), params.get(0).getSimpleName().toString())
+                                    .addStatement("super.$N($N)", method.getName(),params.get(0).getSimpleName().toString())
+                                    .addStatement("sendTrigger(this)")
+                                    .build());
+                }
+            }
+        }
+
+
+
 //        if (mMethods.size() > 0) {
 //            injectMethodBuilder.addStatement("$T listener", TypeUtil.ANDROID_ON_CLICK_LISTENER);
 //        }
@@ -78,11 +112,22 @@ public class AnnotatedClass {
 //            }
 //        }
         // generate whole class
-        TypeSpec finderClass = TypeSpec.classBuilder(mClassElement.getSimpleName() + "$$Finder")
-            .addModifiers(Modifier.PUBLIC)
-            .addSuperinterface(ParameterizedTypeName.get(TypeUtil.FINDER, TypeName.get(mClassElement.asType())))
-            .addMethod(injectMethodBuilder.build())
-            .build();
+        TypeSpec.Builder finderClassBuilder = TypeSpec.classBuilder(mClassElement.getSimpleName() + "$$Subcriber")
+                .superclass(TypeName.get(mClassElement.asType()))
+                .addModifiers(Modifier.PUBLIC)
+                .addSuperinterface(ParameterizedTypeName.get(TypeUtil.SUBCRIBER, TypeName.get(mClassElement.asType())))
+                .addMethod(injectMethodBuilder.build())
+                .addField(PublishSubject.class,"triggers");
+
+        if (constructor != null) {
+            finderClassBuilder.addMethod(constructor);
+        }
+
+        for (MethodSpec injectMethodSpec : injectMethods) {
+            finderClassBuilder.addMethod(injectMethodSpec);
+        }
+
+        TypeSpec finderClass = finderClassBuilder.build();
 
         String packageName = mElementUtils.getPackageOf(mClassElement).getQualifiedName().toString();
 

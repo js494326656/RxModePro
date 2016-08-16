@@ -3,8 +3,12 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/RxModePro.iml" filepath="$PROJECT_DIR$/RxModePro.iml" />
+      <module fileurl="file://$PROJECT_DIR$/RxModePro.iml" filepath="$PROJECT_DIR$/RxModePro.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/rxmode/rxmode.iml" filepath="$PROJECT_DIR$/rxmode/rxmode.iml" />
+      <module fileurl="file://$PROJECT_DIR$/rxmode/rxmode.iml" filepath="$PROJECT_DIR$/rxmode/rxmode.iml" />
+      <module fileurl="file://$PROJECT_DIR$/rxmodecomplier/rxmodecomplier.iml" filepath="$PROJECT_DIR$/rxmodecomplier/rxmodecomplier.iml" />
       <module fileurl="file://$PROJECT_DIR$/rxmodecomplier/rxmodecomplier.iml" filepath="$PROJECT_DIR$/rxmodecomplier/rxmodecomplier.iml" />
     </modules>
   </component>
