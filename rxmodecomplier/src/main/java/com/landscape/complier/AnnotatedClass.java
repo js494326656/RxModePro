@@ -12,6 +12,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -19,11 +20,6 @@ import javax.lang.model.util.Elements;
 
 import rx.subjects.PublishSubject;
 
-/**
- * Created by brucezz on 2016-07-27.
- * Github: https://github.com/brucezz
- * Email: im.brucezz@gmail.com
- */
 public class AnnotatedClass {
 
     public TypeElement mClassElement;
@@ -43,24 +39,8 @@ public class AnnotatedClass {
         mType = type;
     }
 
-    public JavaFile generateFinder() {
+    public JavaFile generateFinder() throws Exception {
         List<MethodSpec> injectMethods = new ArrayList<>();
-        Method[] methods = null;
-        MethodSpec constructor = null;
-        try {
-            Class<?> cls = Class.forName(mClassElement.getSimpleName().toString());
-            methods = cls.getMethods();
-            // constructor
-            constructor = MethodSpec.constructorBuilder()
-                    .addModifiers(Modifier.PUBLIC)
-                    .addParameter(cls, "parent")
-                    .addStatement("this.$N = $N", "greeting", "greeting")
-                    .build();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-
-
         // method inject(final T host, Object source, Provider provider)
         MethodSpec.Builder injectMethodBuilder = MethodSpec.methodBuilder("sendTrigger")
                 .addModifiers(Modifier.PUBLIC)
@@ -68,69 +48,45 @@ public class AnnotatedClass {
                 .addParameter(TypeName.get(mClassElement.asType()), "bean")
                 .addStatement("if(triggers != null){triggers.onNext(bean);}");
 
+        // trigger setter
+        MethodSpec.Builder triggerSetterBuilder = MethodSpec.methodBuilder("setTrigger")
+                .addModifiers(Modifier.PUBLIC)
+                .addAnnotation(Override.class)
+                .addParameter(TypeUtil.PUBLISHSUBJECT, "trigger")
+                .addStatement("this.triggers = trigger");
+
 
         // add sendtrigger()
-        for (int i = 0; i < methods.length; i++) {
-            Method method = methods[i];
-            if (method.getName().startsWith("set")) {
+        for (int i = 0; i < mType.getMethodElement().size(); i++) {
+            ExecutableElement element = mType.getMethodElement().get(i);
+            if (element.getSimpleName().toString().startsWith("set")) {
                 List<VariableElement> params = (List<VariableElement>) mType.getMethodElement().get(i).getParameters();
                 if (params.size() > 0) {
                     injectMethods.add(
-                            MethodSpec.methodBuilder(method.getName())
+                            MethodSpec.methodBuilder(element.getSimpleName().toString())
                                     .addModifiers(Modifier.PUBLIC)
                                     .addAnnotation(Override.class)
                                     .returns(TypeName.VOID)
                                     .addParameter(TypeName.get(params.get(0).asType()), params.get(0).getSimpleName().toString())
-                                    .addStatement("super.$N($N)", method.getName(),params.get(0).getSimpleName().toString())
+                                    .addStatement("super.$N($N)", element.getSimpleName().toString(),params.get(0).getSimpleName().toString())
                                     .addStatement("sendTrigger(this)")
                                     .build());
                 }
             }
         }
-
-
-
-//        if (mMethods.size() > 0) {
-//            injectMethodBuilder.addStatement("$T listener", TypeUtil.ANDROID_ON_CLICK_LISTENER);
-//        }
-//        for (OnClickMethod method : mMethods) {
-//            // declare OnClickListener anonymous class
-//            TypeSpec listener = TypeSpec.anonymousClassBuilder("")
-//                .addSuperinterface(TypeUtil.ANDROID_ON_CLICK_LISTENER)
-//                .addMethod(MethodSpec.methodBuilder("onClick")
-//                    .addAnnotation(Override.class)
-//                    .addModifiers(Modifier.PUBLIC)
-//                    .returns(TypeName.VOID)
-//                    .addParameter(TypeUtil.ANDROID_VIEW, "view")
-//                    .addStatement("host.$N()", method.getMethodName())
-//                    .build())
-//                .build();
-//            injectMethodBuilder.addStatement("listener = $L ", listener);
-//            for (int id : method.ids) {
-//                // set listeners
-//                injectMethodBuilder.addStatement("provider.findView(source, $L).setOnClickListener(listener)", id);
-//            }
-//        }
         // generate whole class
         TypeSpec.Builder finderClassBuilder = TypeSpec.classBuilder(mClassElement.getSimpleName() + "$$Subcriber")
                 .superclass(TypeName.get(mClassElement.asType()))
                 .addModifiers(Modifier.PUBLIC)
                 .addSuperinterface(ParameterizedTypeName.get(TypeUtil.SUBCRIBER, TypeName.get(mClassElement.asType())))
                 .addMethod(injectMethodBuilder.build())
+                .addMethod(triggerSetterBuilder.build())
                 .addField(PublishSubject.class,"triggers");
-
-        if (constructor != null) {
-            finderClassBuilder.addMethod(constructor);
-        }
-
         for (MethodSpec injectMethodSpec : injectMethods) {
             finderClassBuilder.addMethod(injectMethodSpec);
         }
-
         TypeSpec finderClass = finderClassBuilder.build();
-
         String packageName = mElementUtils.getPackageOf(mClassElement).getQualifiedName().toString();
-
         return JavaFile.builder(packageName, finderClass).build();
     }
 }

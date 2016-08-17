@@ -1,1 +1,1 @@
-include ':app', ':rxmode', ':rxmodecomplier'
+include ':app', ':rxmode', ':rxmodecomplier', ':rxmodeannotation'

@@ -25,10 +25,6 @@ import javax.tools.Diagnostic;
 @AutoService(Processor.class)
 public class BeanFinderProcesser extends AbstractProcessor {
 
-    /**
-     * 使用 Google的auto-service库可以自动生成META-INF/services/javax.annotation.processing.Processor文件
-     */
-
     private Filer mFiler; //文件相关的辅助类
     private Elements mElementUtils; //元素相关的辅助类
     private Messager mMessager; //日志相关的辅助类
@@ -41,9 +37,6 @@ public class BeanFinderProcesser extends AbstractProcessor {
         mMessager = processingEnv.getMessager();
     }
 
-    /**
-     * @return 指定哪些注解应该被注解处理器注册
-     */
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         Set<String> types = new LinkedHashSet<>();
@@ -51,9 +44,6 @@ public class BeanFinderProcesser extends AbstractProcessor {
         return types;
     }
 
-    /**
-     * @return 指定使用的Java版本。通常返回SourceVersion.latestSupported()。
-     */
     @Override
     public SourceVersion getSupportedSourceVersion() {
         return SourceVersion.latestSupported();
@@ -76,7 +66,7 @@ public class BeanFinderProcesser extends AbstractProcessor {
             try {
                 info("Generating file for %s", annotatedClass.getFullClassName());
                 annotatedClass.generateFinder().writeTo(mFiler);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 error("Generate file failed, reason: %s", e.getMessage());
                 return true;
             }
@@ -86,7 +76,6 @@ public class BeanFinderProcesser extends AbstractProcessor {
 
     private void processRxBean(RoundEnvironment roundEnv) throws IllegalArgumentException {
         for (Element element : roundEnv.getElementsAnnotatedWith(RxBean.class)) {
-            // TODO: 16/8/4 检查字段的修饰符
             AnnotatedClass annotatedClass = getAnnotatedClass((TypeElement) element);
             RxBeanType field = new RxBeanType(element);
             annotatedClass.addClass(field);

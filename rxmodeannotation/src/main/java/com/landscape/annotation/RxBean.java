@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
  * Created by 1 on 2016/8/16.
  */
 @Retention(RetentionPolicy.CLASS)
-@Target(ElementType.FIELD)
+@Target(ElementType.TYPE)
 public @interface RxBean {
 }
