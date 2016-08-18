@@ -7,14 +7,14 @@ import java.lang.reflect.Field;
  */
 public class InheritUtils<T> {
 
-    public InheritUtils create() {
-        return new InheritUtils();
+    public static <T> InheritUtils<T> create() {
+        return new InheritUtils<>();
     }
 
-    public T cloneObject(T object, String className) throws Exception {
+    public T cloneObject(T object) throws Exception {
         T result = null;
         Class<?> finderClass = null;
-        finderClass = Class.forName(className + "$$Subcriber");
+        finderClass = Class.forName(object.getClass().getName() + "$$Subcriber");
         result = (T) finderClass.newInstance();
         Field[] srcFields = object.getClass().getDeclaredFields();
         for (int i = 0; i < srcFields.length; i++) {

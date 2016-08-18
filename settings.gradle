@@ -1,1 +1,1 @@
-include ':app', ':rxmode', ':rxmodecomplier', ':rxmodeannotation'
+include ':app', ':silk', ':silkcomplier', ':silkannotation'

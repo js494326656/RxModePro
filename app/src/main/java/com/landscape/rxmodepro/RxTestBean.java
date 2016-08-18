@@ -98,4 +98,20 @@ public class RxTestBean {
     public void setTotal(double total) {
         this.total = total;
     }
+
+    @Override
+    public String toString() {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("num:" + num + "\n");
+        buffer.append("id:" + id + "\n");
+        buffer.append("isClose:" + isClose + "\n");
+        buffer.append("score:" + score + "\n");
+        buffer.append("nick:" + nick + "\n");
+        buffer.append("name:" + name + "\n");
+        buffer.append("firstName:" + firstName + "\n");
+        buffer.append("price:" + price + "\n");
+        buffer.append("amount:" + amount + "\n");
+        buffer.append("total:" + total + "\n");
+        return buffer.toString();
+    }
 }

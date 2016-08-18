@@ -10,18 +10,18 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/rxmode" />
-            <option value="$PROJECT_DIR$/rxmodeannotation" />
-            <option value="$PROJECT_DIR$/rxmodecomplier" />
+            <option value="$PROJECT_DIR$/silk" />
+            <option value="$PROJECT_DIR$/silkannotation" />
+            <option value="$PROJECT_DIR$/silkcomplier" />
           </set>
         </option>
         <option name="myModules">
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/rxmode" />
-            <option value="$PROJECT_DIR$/rxmodeannotation" />
-            <option value="$PROJECT_DIR$/rxmodecomplier" />
+            <option value="$PROJECT_DIR$/silk" />
+            <option value="$PROJECT_DIR$/silkannotation" />
+            <option value="$PROJECT_DIR$/silkcomplier" />
           </set>
         </option>
       </GradleProjectSettings>
