@@ -1,6 +1,7 @@
 package com.landscape.rxmodepro;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.TextView;
@@ -36,11 +37,15 @@ public class MainActivity extends AppCompatActivity {
     @OnClick(R.id.btn_get)
     void get(View view){
         //TODO
-        testBean = brite.createQueryBean(mockData());
-        brite.query()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(this::showResult);
+        if (testBean == null) {
+            testBean = brite.createQueryBean(mockData());
+            brite.query()
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(this::showResult);
+        } else {
+            brite.updateBean(mockData());
+        }
     }
 
     @OnClick(R.id.btn_test)

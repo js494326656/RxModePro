@@ -48,6 +48,18 @@ public class SilkBrite<T> {
         return destBean;
     }
 
+    public void updateBean(T srcBean) {
+        if (destBean.getClass().isAssignableFrom(srcBean.getClass())) {
+            throw new IllegalArgumentException("必须传入相同类型");
+        }
+        InheritUtils<T> inheritUtils = InheritUtils.create();
+        try {
+            inheritUtils.cpObject(srcBean, destBean);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public Observable<T> query() {
         final Observable<T> queryObservable = triggers //
                 .startWith(destBean) //
