@@ -1,20 +1,17 @@
 package com.landscape.rxmodepro;
 
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.TextView;
 
 import com.landscape.SilkBrite;
-import com.landscape.SilkLog;
 import com.orhanobut.logger.Logger;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
@@ -38,8 +35,8 @@ public class MainActivity extends AppCompatActivity {
     void get(View view){
         //TODO
         if (testBean == null) {
-            testBean = brite.createQueryBean(mockData());
-            brite.query()
+            testBean = brite.asSilkBean(mockData());
+            brite.asModeObservable()
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(this::showResult);

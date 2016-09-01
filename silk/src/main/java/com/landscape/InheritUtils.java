@@ -6,13 +6,8 @@ import java.lang.reflect.Method;
 /**
  * Created by 1 on 2016/8/17.
  */
-public class InheritUtils<T> {
-
-    public static <T> InheritUtils<T> create() {
-        return new InheritUtils<>();
-    }
-
-    public T cloneObject(T object) throws Exception {
+public class InheritUtils {
+    public static  <T> T cloneObject(Object object) throws Exception {
         T result = null;
         Class<?> finderClass = null;
         finderClass = Class.forName(object.getClass().getName() + "$$Subcriber");
@@ -27,7 +22,7 @@ public class InheritUtils<T> {
         return result;
     }
 
-    public void cpObject(T srcBean,T destBean) throws Exception {
+    public static  <T> void cpObject(T srcBean,T destBean) throws Exception {
         boolean hasChanged = false;
         Field[] srcFields = srcBean.getClass().getDeclaredFields();
         for (int i = 0; i < srcFields.length; i++) {

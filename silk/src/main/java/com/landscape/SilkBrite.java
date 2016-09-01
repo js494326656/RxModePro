@@ -36,12 +36,14 @@ public class SilkBrite<T> {
 
     private final Scheduler scheduler = Schedulers.io();
 
+    public T asSilkBean(){
+        return destBean;
+    }
 
-    public T createQueryBean(T srcBean) {
+    public T asSilkBean(T srcBean) {
         destBean = null;
         try {
-            InheritUtils<T> inheritUtils = InheritUtils.create();
-            destBean = inheritUtils.cloneObject(srcBean);
+            destBean = InheritUtils.cloneObject(srcBean);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -52,17 +54,16 @@ public class SilkBrite<T> {
         if (destBean.getClass().isAssignableFrom(srcBean.getClass())) {
             throw new IllegalArgumentException("必须传入相同类型");
         }
-        InheritUtils<T> inheritUtils = InheritUtils.create();
         try {
-            inheritUtils.cpObject(srcBean, destBean);
+            InheritUtils.cpObject(srcBean, destBean);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public Observable<T> query() {
-        final Observable<T> queryObservable = triggers //
-                .startWith(destBean) //
+    public Observable<T> asModeObservable() {
+        final Observable<T> queryObservable = triggers
+                .startWith(destBean)
                 .subscribeOn(scheduler)
                 .onBackpressureLatest() // Guard against uncontrollable frequency of scheduler executions.
                 .doOnSubscribe(new Action0() {

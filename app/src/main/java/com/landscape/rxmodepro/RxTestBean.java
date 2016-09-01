@@ -2,6 +2,8 @@ package com.landscape.rxmodepro;
 
 import com.landscape.annotation.RxBean;
 
+import java.lang.reflect.Field;
+
 /**
  * Created by 1 on 2016/8/17.
  */
@@ -18,6 +20,11 @@ public class RxTestBean {
     private float price;
     private float amount;
     private double total;
+    private Integer test2;
+    private Long test65;
+    private Short hhaha;
+    private Boolean test3;
+    private Character test4;
 
     public int getNum() {
         return num;
@@ -102,16 +109,36 @@ public class RxTestBean {
     @Override
     public String toString() {
         StringBuffer buffer = new StringBuffer();
-        buffer.append("num:" + num + "\n");
-        buffer.append("id:" + id + "\n");
-        buffer.append("isClose:" + isClose + "\n");
-        buffer.append("score:" + score + "\n");
-        buffer.append("nick:" + nick + "\n");
-        buffer.append("name:" + name + "\n");
-        buffer.append("firstName:" + firstName + "\n");
-        buffer.append("price:" + price + "\n");
-        buffer.append("amount:" + amount + "\n");
-        buffer.append("total:" + total + "\n");
+        Field[] fields = RxTestBean.class.getDeclaredFields();
+        try {
+            for (Field field : fields) {
+                field.setAccessible(true);
+                buffer.append("name:"+
+                        field.getName() +
+                        "    isPrimitive:" +
+                        (field.getType().isPrimitive() ||
+                                (String.class.isAssignableFrom(field.getType())) ||
+                                (Number.class.isAssignableFrom(field.getType())) ||
+                                (Boolean.class.isAssignableFrom(field.getType())) ||
+                                (Character.class.isAssignableFrom(field.getType()))) +"\n");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+//
+//
+//
+//
+//        buffer.append("num:" + num + "\n");
+//        buffer.append("id:" + id + "\n");
+//        buffer.append("isClose:" + isClose + "\n");
+//        buffer.append("score:" + score + "\n");
+//        buffer.append("nick:" + nick + "\n");
+//        buffer.append("name:" + name + "\n");
+//        buffer.append("firstName:" + firstName + "\n");
+//        buffer.append("price:" + price + "\n");
+//        buffer.append("amount:" + amount + "\n");
+//        buffer.append("total:" + total + "\n");
         return buffer.toString();
     }
 }
