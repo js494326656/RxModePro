@@ -2,6 +2,7 @@ package com.landscape;
 
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
+
 import rx.Observable;
 import rx.Scheduler;
 import rx.Subscriber;
@@ -16,14 +17,19 @@ public class SilkBrite<T> {
 
     T destBean = null;
 
+    SilkBeanDriver<T> silkBeanDriver = new SilkBeanDriver<>();
+
     private final SilkLog logger;
 
-    @CheckResult @NonNull
-    public static SilkBrite create(){
-        return new SilkBrite(message -> {});
+    @CheckResult
+    @NonNull
+    public static SilkBrite create() {
+        return new SilkBrite(message -> {
+        });
     }
 
-    @CheckResult @NonNull
+    @CheckResult
+    @NonNull
     public static SilkBrite create(SilkLog log) {
         return new SilkBrite(log);
     }
@@ -36,43 +42,34 @@ public class SilkBrite<T> {
 
     private final Scheduler scheduler = Schedulers.io();
 
-    public T asSilkBean(){
-        return destBean;
+    public T asSilkBean() {
+        return silkBeanDriver.getSilkBean();
     }
 
     public T asSilkBean(T srcBean) {
-        destBean = null;
-        try {
-            destBean = InheritUtils.cloneObject(srcBean);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return destBean;
+        return silkBeanDriver.asSilkBean(srcBean).getSilkBean();
     }
 
     public void updateBean(T srcBean) {
         if (destBean.getClass().isAssignableFrom(srcBean.getClass())) {
             throw new IllegalArgumentException("必须传入相同类型");
         }
-        try {
-            InheritUtils.cpObject(srcBean, destBean);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        silkBeanDriver.updateBean(srcBean);
     }
 
     public Observable<T> asModeObservable() {
         final Observable<T> queryObservable = triggers
-                .startWith(destBean)
+                .startWith(silkBeanDriver.getSilkBean())
                 .subscribeOn(scheduler)
                 .onBackpressureLatest() // Guard against uncontrollable frequency of scheduler executions.
                 .doOnSubscribe(new Action0() {
-                    @Override public void call() {
-                        if (destBean == null) {
+                    @Override
+                    public void call() {
+                        if (silkBeanDriver.getSilkBean() == null) {
                             throw new IllegalStateException(
                                     "Cannot subscribe to observable for the bean is null.");
                         }
-                        ((BeanSupcriber)destBean).setTrigger(triggers);
+                        silkBeanDriver.setTrigger(triggers);
                     }
                 });
         return Observable.create(new Observable.OnSubscribe<T>() {
