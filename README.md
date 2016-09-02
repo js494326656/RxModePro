@@ -61,8 +61,8 @@ public class UserAccount{
 ```java
 TextView tvName = findViewById(R.id.tv_name);
 SilkBrite<UserAccount> brite = SilkBrite.create();//初始化了一个brite
-UserAccount useraccount = brite.createQueryBean(getUserAccount());//获取useraccount对象，其实这是一个“换了包”的对象
-brite.query()
+UserAccount useraccount = brite.asSilkBean(getUserAccount());//获取useraccount对象，其实这是一个“换了包”的对象
+brite.asModeObservable()
     .subscribeOn(Schedulers.io())
     .observeOn(AndroidSchedulers.mainThread())
     .subscribe(new Action1<UserAccount>() {
@@ -107,11 +107,11 @@ apply plugin: 'com.neenbedankt.android-apt'
 
 * 如上所说，在你需要silk功能的java bean类上使用RxBean注解，然后重新构建一下项目
 * 然后要新建一个SilkBrite出来`SilkBrite<UserAccount> brite = SilkBrite.create();`，注意，目前来说，一个brite就对应处理一个bean对象
-* 接下来需要将原有的bean对象设置一个代理`UserAccount useraccount = brite.createQueryBean(getUserAccount());`
+* 接下来需要将原有的bean对象设置一个代理`UserAccount useraccount = brite.asSilkBean(getUserAccount());`
 * 上一步生成的代理对象才能真正嵌入到Silk响应式框架之中，通过bean的setter即可触发相应
 * 我们需要监听到事件源发出的消息并作出反应
 ```java
-brite.query()
+brite.asModeObservable()
     .subscribeOn(Schedulers.io())
     .observeOn(AndroidSchedulers.mainThread())
     .subscribe(new Action1<UserAccount>() {
@@ -121,6 +121,74 @@ brite.query()
                     }
                 });
 ```
+* 当然，还可以嵌套使用，比如一个Parent对象有2个Child，不管是修改Parent的属性或者是child属性，我们都希望能得到通知，则两个类都标记上RxBean注解即可
+```java
+@RxBean
+public class Parent{
+  private String userName;//姓名
+  private int age;//年龄
+  private String userImage;//头像
+  private Child child1;
+  private Child child2;
+
+  public void setUserName(String userName){
+    this.userName = userName;
+  }
+  
+  public String getUserName(){
+    return userName;
+  }
+  
+  //后略......
+}
+
+@RxBean
+public class Child{
+  private String userName;//姓名
+  private int age;//年龄
+  //......
+}
+```
+* 有时候我们有这样的需求，显示UserAccount的nick的时候希望能加上如果为空的默认显示
+```java
+brite.asNodeObservable("nick")
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .map(o1 -> {
+            String name = String.valueOf(o1);
+            if (TextUtils.isEmpty(name)) {
+                return "unknown user";
+            }
+            return name;
+        })
+        .subscribe(new Action1<String>() {
+                @Override
+                public void call(String name) {
+                    tvName.setText(name);
+                }
+            });
+
+```
+* 如果是要加上child的默认显示
+```java
+brite.asNodeObservable("child1::userName")
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .map(o1 -> {
+            String name = String.valueOf(o1);
+            if (TextUtils.isEmpty(name)) {
+                return "unknown user";
+            }
+            return name;
+        })
+        .subscribe(new Action1<String>() {
+                @Override
+                public void call(String name) {
+                    tvName.setText(name);
+                }
+            });
+```
+
 
 ##限制
 
