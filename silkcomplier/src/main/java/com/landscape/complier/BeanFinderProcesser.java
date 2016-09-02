@@ -3,6 +3,7 @@ package com.landscape.complier;
 import com.google.auto.service.AutoService;
 import com.landscape.annotation.RxBean;
 import com.landscape.model.RxBeanType;
+import com.squareup.javapoet.TypeName;
 
 import java.io.IOException;
 import java.util.HashMap;
