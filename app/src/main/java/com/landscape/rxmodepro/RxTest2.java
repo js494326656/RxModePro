@@ -34,4 +34,14 @@ public class RxTest2 {
     public void setNumber(int number) {
         this.number = number;
     }
+
+    @Override
+    public String toString() {
+        StringBuffer strBuffer = new StringBuffer();
+        strBuffer.append("\n");
+        strBuffer.append("nick:" + nick + "\n");
+        strBuffer.append("age:" + age + "\n");
+        strBuffer.append("number:" + number + "\n");
+        return strBuffer.toString();
+    }
 }

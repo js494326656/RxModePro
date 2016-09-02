@@ -1,11 +1,14 @@
 package com.landscape;
 
+import android.content.ContentValues;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 
 import rx.subjects.PublishSubject;
 
@@ -100,7 +103,11 @@ public class SilkBeanDriver<T> {
                 if (!isPrimitive) {
                     iteratorCopy(fieldObj,field.get(destObj));
                 } else {
-                    field.set(destObj, fieldObj);
+                    Object destVal = field.get(destObj);
+                    if (fieldObj.hashCode() != destVal.hashCode() && !fieldObj.equals(destVal)) {
+                        hasChanged = true;
+                        field.set(destObj,fieldObj);
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -109,10 +116,10 @@ public class SilkBeanDriver<T> {
     }
 
     public void setTrigger(PublishSubject triggers) {
-        ((BeanSupcriber) silkBean).setTrigger(triggers);
+        ((BeanSupcriber) silkBean).setSilkTrigger(triggers);
         List<BeanSupcriber> subSilkBeans = iteratorBean(silkBean);
         for (BeanSupcriber beanSupcriber : subSilkBeans) {
-            beanSupcriber.setTrigger(triggers);
+            beanSupcriber.setSilkTrigger(triggers);
         }
     }
 
@@ -121,7 +128,12 @@ public class SilkBeanDriver<T> {
             return new ArrayList<>();
         }
         List<BeanSupcriber> subSilkBeans = new ArrayList<>();
-        Field[] fields = srcObj.getClass().getDeclaredFields();
+        Field[] fields;
+        if (srcObj.getClass().getName().contains("$$Subcriber")) {
+            fields = srcObj.getClass().getSuperclass().getDeclaredFields();
+        } else {
+            fields = srcObj.getClass().getDeclaredFields();
+        }
         for (Field field : fields) {
             field.setAccessible(true);
             try {
@@ -136,7 +148,9 @@ public class SilkBeanDriver<T> {
                     if (fieldObj.getClass().getName().contains("$$Subcriber")) {
                         subSilkBeans.add((BeanSupcriber) fieldObj);
                     }
-                    subSilkBeans.addAll(iteratorBean(field.get(srcObj)));
+                    if (!field.getName().equals("silkTrigger")) {
+                        subSilkBeans.addAll(iteratorBean(field.get(srcObj)));
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();

@@ -10,7 +10,9 @@ import com.squareup.javapoet.TypeSpec;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
@@ -42,19 +44,18 @@ public class AnnotatedClass {
     public JavaFile generateFinder() throws Exception {
         List<MethodSpec> injectMethods = new ArrayList<>();
         // method inject(final T host, Object source, Provider provider)
-        MethodSpec.Builder injectMethodBuilder = MethodSpec.methodBuilder("sendTrigger")
+        MethodSpec.Builder sendSilkMethodBuilder = MethodSpec.methodBuilder("sendTrigger")
                 .addModifiers(Modifier.PUBLIC)
                 .addAnnotation(Override.class)
                 .addParameter(TypeName.get(mClassElement.asType()), "bean")
-                .addStatement("if(triggers != null){triggers.onNext(bean);}");
+                .addStatement("if(silkTrigger != null){silkTrigger.onNext(bean);}");
 
         // trigger setter
-        MethodSpec.Builder triggerSetterBuilder = MethodSpec.methodBuilder("setTrigger")
+        MethodSpec.Builder triggerSetterBuilder = MethodSpec.methodBuilder("setSilkTrigger")
                 .addModifiers(Modifier.PUBLIC)
                 .addAnnotation(Override.class)
-                .addParameter(TypeUtil.PUBLISHSUBJECT, "trigger")
-                .addStatement("this.triggers = trigger");
-
+                .addParameter(TypeUtil.PUBLISHSUBJECT, "silkTrigger")
+                .addStatement("this.silkTrigger = silkTrigger");
 
         // add sendtrigger()
         for (int i = 0; i < mType.getMethodElement().size(); i++) {
@@ -68,7 +69,7 @@ public class AnnotatedClass {
                                     .addAnnotation(Override.class)
                                     .returns(TypeName.VOID)
                                     .addParameter(TypeName.get(params.get(0).asType()), params.get(0).getSimpleName().toString())
-                                    .addStatement("super.$N($N)", element.getSimpleName().toString(),params.get(0).getSimpleName().toString())
+                                    .addStatement("super.$N($N)", element.getSimpleName().toString(), params.get(0).getSimpleName().toString())
                                     .addStatement("sendTrigger(this)")
                                     .build());
                 }
@@ -79,9 +80,9 @@ public class AnnotatedClass {
                 .superclass(TypeName.get(mClassElement.asType()))
                 .addModifiers(Modifier.PUBLIC)
                 .addSuperinterface(ParameterizedTypeName.get(TypeUtil.SUBCRIBER, TypeName.get(mClassElement.asType())))
-                .addMethod(injectMethodBuilder.build())
+                .addMethod(sendSilkMethodBuilder.build())
                 .addMethod(triggerSetterBuilder.build())
-                .addField(PublishSubject.class,"triggers");
+                .addField(PublishSubject.class,"silkTrigger");
         for (MethodSpec injectMethodSpec : injectMethods) {
             finderClassBuilder.addMethod(injectMethodSpec);
         }

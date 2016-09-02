@@ -1,5 +1,9 @@
 package com.landscape;
 
+import android.content.ContentValues;
+
+import java.util.Map;
+
 import rx.subjects.PublishSubject;
 
 /**
@@ -7,5 +11,5 @@ import rx.subjects.PublishSubject;
  */
 public interface BeanSupcriber<T> {
     void sendTrigger(T bean);
-    void setTrigger(PublishSubject trigger);
+    void setSilkTrigger(PublishSubject silkTrigger);
 }
