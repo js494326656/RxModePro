@@ -34,7 +34,6 @@ dependencies {
     compile 'com.android.support:support-v4:23.3.0'
     compile 'com.jakewharton:butterknife:7.0.1'
     compile 'com.github.orhanobut:logger:1.12'
-    compile project(':silkannotation')
     apt project(':silkcomplier')
     compile project(':silk')
     apt 'com.google.dagger:dagger-compiler:2.0.1'
