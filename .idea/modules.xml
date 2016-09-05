@@ -5,12 +5,8 @@
       <module fileurl="file://$PROJECT_DIR$/RxModePro.iml" filepath="$PROJECT_DIR$/RxModePro.iml" />
       <module fileurl="file://$PROJECT_DIR$/Silk.iml" filepath="$PROJECT_DIR$/Silk.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/silk/silk.iml" filepath="$PROJECT_DIR$/silk/silk.iml" />
       <module fileurl="file://$PROJECT_DIR$/silk/silk.iml" filepath="$PROJECT_DIR$/silk/silk.iml" />
       <module fileurl="file://$PROJECT_DIR$/silkannotation/silkannotation.iml" filepath="$PROJECT_DIR$/silkannotation/silkannotation.iml" />
-      <module fileurl="file://$PROJECT_DIR$/silkannotation/silkannotation.iml" filepath="$PROJECT_DIR$/silkannotation/silkannotation.iml" />
-      <module fileurl="file://$PROJECT_DIR$/silkcomplier/silkcomplier.iml" filepath="$PROJECT_DIR$/silkcomplier/silkcomplier.iml" />
       <module fileurl="file://$PROJECT_DIR$/silkcomplier/silkcomplier.iml" filepath="$PROJECT_DIR$/silkcomplier/silkcomplier.iml" />
     </modules>
   </component>
