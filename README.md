@@ -81,18 +81,16 @@ useraccount.setUserName("mike");
 
 ##引用
 
-* Android Studio
-
-将[silk](silk)和[silkannotation](silkannotation)引入，同时设置apt [silkcomplier](silkcomplier)
-
-```xml
+* gradle
+```gradle
 dependencies {
-    compile project(':silkannotation')
-    compile project(':silk')
-    apt project(':silkcomplier')
+    ...
+    compile 'com.github.landscapeside:SilkLib:1.0'
+    apt 'com.github.landscapeside:SilkComplier:0.1'
+    ...
 }
 ```
-因为使用了apt，所以需要在你的project的build.gradle中申明：
+project的build.gradle中申明：
 ```xml
 dependencies {
         classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
