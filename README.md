@@ -91,13 +91,13 @@ dependencies {
 }
 ```
 project的build.gradle中申明：
-```xml
+```gradle
 dependencies {
         classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
     }
 ```
 然后在你的app项目build.gradle中应用apt插件：
-```xml
+```gradle
 apply plugin: 'com.neenbedankt.android-apt'
 ```
 
