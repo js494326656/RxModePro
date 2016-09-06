@@ -81,7 +81,7 @@ useraccount.setUserName("mike");
 
 ##引用
 
-* gradle
+* gradle，在你的app的build.gradle文件中引入依赖
 ```gradle
 dependencies {
     ...
@@ -90,15 +90,24 @@ dependencies {
     ...
 }
 ```
+然后在你的app的build.gradle中应用apt插件：
+```gradle
+apply plugin: 'com.neenbedankt.android-apt'
+```
 project的build.gradle中申明：
 ```gradle
 dependencies {
         classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
     }
 ```
-然后在你的app项目build.gradle中应用apt插件：
+用的是jitpack仓库，所以需要在project的build.gradle中注明
 ```gradle
-apply plugin: 'com.neenbedankt.android-apt'
+allprojects {
+    repositories {
+        jcenter()
+        maven { url "https://jitpack.io" }
+    }
+}
 ```
 
 ##用法
