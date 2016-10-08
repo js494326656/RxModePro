@@ -35,7 +35,8 @@ dependencies {
     compile 'com.jakewharton:butterknife:7.0.1'
     compile 'com.github.orhanobut:logger:1.12'
     apt project(':silkcomplier')
-    compile project(':silk')
+//    compile project(':silk')
+    compile 'com.github.landscapeside:SilkLib:1.01'
     apt 'com.google.dagger:dagger-compiler:2.0.1'
     compile 'com.google.dagger:dagger:2.0.1'
     compile 'javax.annotation:javax.annotation-api:1.2'
