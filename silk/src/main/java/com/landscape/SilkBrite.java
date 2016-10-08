@@ -4,6 +4,9 @@ import android.content.ContentValues;
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 
+import com.orhanobut.logger.AndroidLogTool;
+import com.orhanobut.logger.Logger;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -29,10 +32,23 @@ public class SilkBrite<T> {
 
     private final SilkLog logger;
 
+    private static void initLog() {
+        Logger.init("Silk V1.0")
+                .methodCount(3)
+                .methodOffset(2)
+                .logTool(new AndroidLogTool());
+    }
+
     @CheckResult
     @NonNull
     public static SilkBrite create() {
+        initLog();
         return new SilkBrite(message -> {
+            if (message.startsWith("{") || message.startsWith("[")) {
+                Logger.json(message);
+            } else {
+                Logger.d(message);
+            }
         });
     }
 
@@ -72,6 +88,12 @@ public class SilkBrite<T> {
                 .subscribeOn(scheduler)
                 .onBackpressureLatest() // Guard against uncontrollable frequency of scheduler executions.
                 .map(t -> silkBeanDriver.getSilkBean())
+                .filter(t -> {
+                    if (logger != null) {
+                        logger.log(JSONS.parseJson(SuperObjUtils.parseParent(t)));
+                    }
+                    return true;
+                })
                 .doOnSubscribe(() -> {
                     if (silkBeanDriver.getSilkBean() == null) {
                         throw new IllegalStateException(
@@ -113,6 +135,12 @@ public class SilkBrite<T> {
                     return true;
                 })
                 .map(map -> (N) map.get(nodeName))
+                .filter(t -> {
+                    if (logger != null) {
+                        logger.log(JSONS.parseJson(t));
+                    }
+                    return true;
+                })
                 .doOnSubscribe(() -> {
                     if (silkBeanDriver.getSilkBean() == null) {
                         throw new IllegalStateException(
@@ -145,7 +173,7 @@ public class SilkBrite<T> {
                         nodes.remove(0);
                         field.setAccessible(true);
                         return requestField(nodes, field.get(object));
-                    } catch (IllegalAccessException e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                         throw new FieldNotMatchedException();
                     }

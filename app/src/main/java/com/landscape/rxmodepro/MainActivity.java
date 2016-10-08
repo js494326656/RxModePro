@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-        brite = SilkBrite.create(Logger::i);
+        brite = SilkBrite.create();
     }
 
     @OnClick(R.id.btn_get)
