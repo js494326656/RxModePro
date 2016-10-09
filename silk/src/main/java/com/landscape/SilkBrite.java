@@ -43,11 +43,14 @@ public class SilkBrite<T> {
     @NonNull
     public static SilkBrite create() {
         initLog();
-        return new SilkBrite(message -> {
-            if (message.startsWith("{") || message.startsWith("[")) {
-                Logger.json(message);
-            } else {
-                Logger.d(message);
+        return new SilkBrite(new SilkLog() {
+            @Override
+            public void log(String message) {
+                if (message.startsWith("{") || message.startsWith("[")) {
+                    Logger.json(message);
+                } else {
+                    Logger.d(message);
+                }
             }
         });
     }
@@ -87,19 +90,30 @@ public class SilkBrite<T> {
                 .startWith(silkBeanDriver.getSilkBean())
                 .subscribeOn(scheduler)
                 .onBackpressureLatest() // Guard against uncontrollable frequency of scheduler executions.
-                .map(t -> silkBeanDriver.getSilkBean())
-                .filter(t -> {
-                    if (logger != null) {
-                        logger.log(JSONS.parseJson(SuperObjUtils.parseParent(t)));
+                .map(new Func1<T, T>() {
+                    @Override
+                    public T call(T t) {
+                        return SilkBrite.this.silkBeanDriver.getSilkBean();
                     }
-                    return true;
                 })
-                .doOnSubscribe(() -> {
-                    if (silkBeanDriver.getSilkBean() == null) {
-                        throw new IllegalStateException(
-                                "Cannot subscribe to observable for the bean is null.");
+                .filter(new Func1<T, Boolean>() {
+                    @Override
+                    public Boolean call(T t) {
+                        if (SilkBrite.this.logger != null) {
+                            SilkBrite.this.logger.log(JSONS.parseJson(SuperObjUtils.parseParent(t)));
+                        }
+                        return true;
                     }
-                    silkBeanDriver.setTrigger(triggers);
+                })
+                .doOnSubscribe(new Action0() {
+                    @Override
+                    public void call() {
+                        if (SilkBrite.this.silkBeanDriver.getSilkBean() == null) {
+                            throw new IllegalStateException(
+                                    "Cannot subscribe to observable for the bean is null.");
+                        }
+                        SilkBrite.this.silkBeanDriver.setTrigger(SilkBrite.this.triggers);
+                    }
                 });
         return Observable.create(new Observable.OnSubscribe<T>() {
             @Override
@@ -109,44 +123,66 @@ public class SilkBrite<T> {
         });
     }
 
-    public <N> Observable<N> asNodeObservable(String nodeName) {
+    public <N> Observable<N> asNodeObservable(final String nodeName) {
         final String[] nodes = nodeName.split("::");
         Observable<N> nodeObservable = triggers
                 .startWith(silkBeanDriver.getSilkBean())
                 .subscribeOn(scheduler)
                 .onBackpressureLatest()
-                .map(t -> silkBeanDriver.getSilkBean())
-                .map(t -> {
-                    Map values = null;
-                    List<String> nodeList = new ArrayList<>(Arrays.asList(nodes));
-                    try {
-                        Object object = requestField(nodeList,t);
-                        values = new HashMap();
-                        values.put(nodeName, object);
-                    } catch (FieldNotMatchedException e) {
-                        values = null;
+                .map(new Func1<T, T>() {
+                    @Override
+                    public T call(T t) {
+                        return SilkBrite.this.silkBeanDriver.getSilkBean();
                     }
-                    return values;
                 })
-                .filter(map -> {
-                    if (map == null) {
-                        return false;
+                .map(new Func1<T, Map>() {
+                    @Override
+                    public Map call(T t) {
+                        Map values = null;
+                        List<String> nodeList = new ArrayList<>(Arrays.asList(nodes));
+                        try {
+                            Object object = SilkBrite.this.requestField(nodeList, t);
+                            values = new HashMap();
+                            values.put(nodeName, object);
+                        } catch (FieldNotMatchedException e) {
+                            values = null;
+                        }
+                        return values;
                     }
-                    return true;
                 })
-                .map(map -> (N) map.get(nodeName))
-                .filter(t -> {
-                    if (logger != null) {
-                        logger.log(JSONS.parseJson(t));
+                .filter(new Func1<Map, Boolean>() {
+                    @Override
+                    public Boolean call(Map map) {
+                        if (map == null) {
+                            return false;
+                        }
+                        return true;
                     }
-                    return true;
                 })
-                .doOnSubscribe(() -> {
-                    if (silkBeanDriver.getSilkBean() == null) {
-                        throw new IllegalStateException(
-                                "Cannot subscribe to observable for the bean is null.");
+                .map(new Func1<Map, N>() {
+                    @Override
+                    public N call(Map map) {
+                        return (N) map.get(nodeName);
                     }
-                    silkBeanDriver.setTrigger(triggers);
+                })
+                .filter(new Func1<N, Boolean>() {
+                    @Override
+                    public Boolean call(N t) {
+                        if (SilkBrite.this.logger != null) {
+                            SilkBrite.this.logger.log(JSONS.parseJson(t));
+                        }
+                        return true;
+                    }
+                })
+                .doOnSubscribe(new Action0() {
+                    @Override
+                    public void call() {
+                        if (SilkBrite.this.silkBeanDriver.getSilkBean() == null) {
+                            throw new IllegalStateException(
+                                    "Cannot subscribe to observable for the bean is null.");
+                        }
+                        SilkBrite.this.silkBeanDriver.setTrigger(SilkBrite.this.triggers);
+                    }
                 });
         return nodeObservable;
     }
