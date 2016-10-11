@@ -63,15 +63,40 @@ public class AnnotatedClass {
             if (element.getSimpleName().toString().startsWith("set")) {
                 List<VariableElement> params = (List<VariableElement>) mType.getMethodElement().get(i).getParameters();
                 if (params.size() > 0) {
+                    String paramName = element.getSimpleName().toString().replace("set", "");
+                    boolean find = false;
+                    for (int j = 0; j < mType.getMethodElement().size(); j++) {
+                        ExecutableElement element1 = mType.getMethodElement().get(j);
+                        System.out.println("scan:" + element.getSimpleName());
+                        if ((element1.getSimpleName().toString().startsWith("is") ||
+                                element1.getSimpleName().toString().startsWith("get")) &&
+                                element1.getSimpleName().toString()
+                                        .replace("is", "")
+                                        .replace("get", "").equals(paramName)) {
+                            paramName = element1.getSimpleName().toString();
+                            find = true;
+                            break;
+                        }
+                    }
+                    MethodSpec.Builder setterMethod = MethodSpec.methodBuilder(element.getSimpleName().toString())
+                            .addModifiers(Modifier.PUBLIC)
+                            .addAnnotation(Override.class)
+                            .returns(TypeName.VOID)
+                            .addParameter(TypeName.get(params.get(0).asType()), params.get(0).getSimpleName().toString());
+                    if (find) {
+                        setterMethod
+                                .addStatement("silkNotify = ($N() != $N || ((Object)$N()).hashCode() != ((Object)$N).hashCode())",
+                                        paramName, params.get(0).getSimpleName().toString(),
+                                        paramName, params.get(0).getSimpleName().toString())
+                                .addStatement("super.$N($N)", element.getSimpleName().toString(), params.get(0).getSimpleName().toString())
+                                .addStatement("if(silkNotify){sendTrigger(this);}");
+                    } else {
+                        setterMethod
+                                .addStatement("super.$N($N)", element.getSimpleName().toString(), params.get(0).getSimpleName().toString())
+                                .addStatement("sendTrigger(this)");
+                    }
                     injectMethods.add(
-                            MethodSpec.methodBuilder(element.getSimpleName().toString())
-                                    .addModifiers(Modifier.PUBLIC)
-                                    .addAnnotation(Override.class)
-                                    .returns(TypeName.VOID)
-                                    .addParameter(TypeName.get(params.get(0).asType()), params.get(0).getSimpleName().toString())
-                                    .addStatement("super.$N($N)", element.getSimpleName().toString(), params.get(0).getSimpleName().toString())
-                                    .addStatement("sendTrigger(this)")
-                                    .build());
+                            setterMethod.build());
                 }
             }
         }
@@ -82,7 +107,8 @@ public class AnnotatedClass {
                 .addSuperinterface(ParameterizedTypeName.get(TypeUtil.SUBCRIBER, TypeName.get(mClassElement.asType())))
                 .addMethod(sendSilkMethodBuilder.build())
                 .addMethod(triggerSetterBuilder.build())
-                .addField(PublishSubject.class,"silkTrigger");
+                .addField(PublishSubject.class, "silkTrigger")
+                .addField(Boolean.class, "silkNotify");
         for (MethodSpec injectMethodSpec : injectMethods) {
             finderClassBuilder.addMethod(injectMethodSpec);
         }

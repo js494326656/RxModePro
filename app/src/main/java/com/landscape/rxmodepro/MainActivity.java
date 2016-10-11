@@ -83,6 +83,8 @@ public class MainActivity extends AppCompatActivity {
         }
         testBean.setNick("adfadf");
         testBean.getRxBean().setNick("Cat");
+        testBean.setNum(99);
+        testBean.setClose(false);
     }
 
     public void showResult(RxTestBean info) {
