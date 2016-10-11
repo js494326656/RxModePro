@@ -85,8 +85,8 @@ useraccount.setUserName("mike");
 ```gradle
 dependencies {
     ...
-    compile 'com.github.landscapeside:SilkLib:1.01'
-    apt 'com.github.landscapeside:SilkComplier:0.1'
+    compile 'com.github.landscapeside:SilkLib:1.03'
+    apt 'com.github.landscapeside:SilkComplier:0.2'
     ...
 }
 ```
