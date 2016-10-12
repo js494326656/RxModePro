@@ -3,6 +3,7 @@ package com.landscape;
 import android.content.ContentValues;
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 
 import com.orhanobut.logger.AndroidLogTool;
 import com.orhanobut.logger.Logger;
@@ -66,7 +67,7 @@ public class SilkBrite<T> {
     }
 
     private final PublishSubject<T> triggers = PublishSubject.create();
-    private final PublishSubject<Map> nodeTrigger = PublishSubject.create();
+    private final PublishSubject<SilkMsg> nodeTrigger = PublishSubject.create();
 
     private final Scheduler scheduler = Schedulers.io();
 
@@ -93,7 +94,7 @@ public class SilkBrite<T> {
                 .map(new Func1<T, T>() {
                     @Override
                     public T call(T t) {
-                        return SilkBrite.this.silkBeanDriver.getSilkBean();
+                        return silkBeanDriver.getSilkBean();
                     }
                 })
                 .filter(new Func1<T, Boolean>() {
@@ -125,44 +126,39 @@ public class SilkBrite<T> {
 
     public <N> Observable<N> asNodeObservable(final String nodeName) {
         final String[] nodes = nodeName.split("::");
-        Observable<N> nodeObservable = triggers
-                .startWith(silkBeanDriver.getSilkBean())
+        List<String> nodeList = new ArrayList<>(Arrays.asList(nodes));
+        Observable<N> nodeObservable = nodeTrigger
+                .startWith(new SilkMsg(nodeName,requestField(nodeList,silkBeanDriver.getSilkBean())))
                 .subscribeOn(scheduler)
                 .onBackpressureLatest()
-                .map(new Func1<T, T>() {
+                .filter(new Func1<SilkMsg, Boolean>() {
                     @Override
-                    public T call(T t) {
-                        return SilkBrite.this.silkBeanDriver.getSilkBean();
-                    }
-                })
-                .map(new Func1<T, Map>() {
-                    @Override
-                    public Map call(T t) {
-                        Map values = null;
-                        List<String> nodeList = new ArrayList<>(Arrays.asList(nodes));
-                        try {
-                            Object object = SilkBrite.this.requestField(nodeList, t);
-                            values = new HashMap();
-                            values.put(nodeName, object);
-                        } catch (FieldNotMatchedException e) {
-                            values = null;
+                    public Boolean call(SilkMsg silkMsg) {
+                        String tag = silkMsg.getTag();
+                        if (!TextUtils.isEmpty(tag)) {
+                            if (tag.startsWith("::")) {
+                                tag = tag.substring(2);
+                            }
+                            if (tag.endsWith("::")) {
+                                tag = tag.substring(0, tag.length() - 2);
+                            }
+                            if (tag.equals(nodeName)) {
+                                return true;
+                            }
                         }
-                        return values;
+                        return false;
                     }
                 })
-                .filter(new Func1<Map, Boolean>() {
+                .map(new Func1<SilkMsg, Object>() {
                     @Override
-                    public Boolean call(Map map) {
-                        if (map == null) {
-                            return false;
-                        }
-                        return true;
+                    public Object call(SilkMsg t) {
+                        return t.getSilkObj();
                     }
                 })
-                .map(new Func1<Map, N>() {
+                .map(new Func1<Object, N>() {
                     @Override
-                    public N call(Map map) {
-                        return (N) map.get(nodeName);
+                    public N call(Object obj) {
+                        return (N) obj;
                     }
                 })
                 .filter(new Func1<N, Boolean>() {
@@ -181,13 +177,13 @@ public class SilkBrite<T> {
                             throw new IllegalStateException(
                                     "Cannot subscribe to observable for the bean is null.");
                         }
-                        SilkBrite.this.silkBeanDriver.setTrigger(SilkBrite.this.triggers);
+                        SilkBrite.this.silkBeanDriver.setNodeTrigger(nodeName, SilkBrite.this.nodeTrigger);
                     }
                 });
         return nodeObservable;
     }
 
-    private Object requestField(List<String> nodes, Object object) throws FieldNotMatchedException {
+    private Object requestField(List<String> nodes, Object object) {
         Field[] fields;
         if (object.getClass().getName().contains("$$Subcriber")) {
             fields = object.getClass().getSuperclass().getDeclaredFields();
@@ -202,7 +198,6 @@ public class SilkBrite<T> {
                         return field.get(object);
                     } catch (IllegalAccessException e) {
                         e.printStackTrace();
-                        throw new FieldNotMatchedException();
                     }
                 } else {
                     try {
@@ -211,12 +206,11 @@ public class SilkBrite<T> {
                         return requestField(nodes, field.get(object));
                     } catch (Exception e) {
                         e.printStackTrace();
-                        throw new FieldNotMatchedException();
                     }
                 }
             }
         }
-        throw new FieldNotMatchedException();
+        return object;
     }
 
 }
